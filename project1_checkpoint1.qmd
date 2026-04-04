@@ -9,11 +9,20 @@ execute:
   warning: false
 ---
 
+## The Data
+
+```{r}
+cases_month <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
+cases_year <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
+```
+
 ## Context of the Data
 
+The data set I chose to work with for this project focuses on measles and rubella cases across the world. It was downloaded from the provisional monthly measles and rubella data of the World Health Organization on 2025-06-12. The data is separated into two different sets, one representing measles cases on a monthly timeline and one representing measles cases on a yearly timeline. Both sets have many of the same variables, however `cases_month` reports the case numbers in terms of per month for each country and `cases_year` reports the case numbers in terms of total per year for each country as well as some population proportions.
 
 ## Data Cleaning
 
+The cleaning script for the data shows that a majority of the cleaning was purposed for fixing data types and renaming variables to names with clearer context. For `cases_month`, the janitor package was used to clean variable names and the dplyr package was used to change `year` to a numeric data type. For `cases_year`, variable names were manually changed to represent specifically what each variable was.
 
 ## Research Questions
 
@@ -28,7 +37,7 @@ These questions can be addressed using supplemental data:
 - question two
 
 
-## Visualization
+## Visualizations
 
 
 
