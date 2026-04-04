@@ -28,14 +28,13 @@ The cleaning script for the data shows that a majority of the cleaning was purpo
 
 These questions can be addressed using the data:
 
-- question one
-- question two
+- How do lab-confirmed measles cases in Italy compare between 2012 and 2025?
+- What is the difference in the relationships between year and total rubella proportion for Bangladesh and Fiji?
 
 These questions can be addressed using supplemental data:
 
-- question one
-- question two
-
+- How does the total measles cases in the United States compare to the total Covid-19 cases in the United States in 2020?
+- What is the difference in proportion of total deaths caused by measles and rubella in Kenya from 2012 to 2024?
 
 ## Visualizations
 
