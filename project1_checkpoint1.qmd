@@ -1,0 +1,54 @@
+---
+title: "Project 1: Checkpoint 1"
+author: "Hailey Hossain"
+format: html
+embed-resources: true
+editor: source
+code-tools: true
+execute:
+  warning: false
+---
+
+## Context of the Data
+
+
+## Data Cleaning
+
+
+## Research Questions
+
+These questions can be addressed using the data:
+
+- question one
+- question two
+
+These questions can be addressed using supplemental data:
+
+- question one
+- question two
+
+
+## Visualization
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
