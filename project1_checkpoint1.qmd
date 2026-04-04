@@ -28,8 +28,8 @@ The cleaning script for the data shows that a majority of the cleaning was purpo
 
 These questions can be addressed using the data:
 
-- How do lab-confirmed measles cases in Italy compare between 2012 and 2025?
-- What is the difference in the relationships between year and total rubella proportion for Bangladesh and Fiji?
+- How do lab-confirmed measles cases in Italy compare between 2012 and 2024?
+- What is the difference in the relationships between year and total rubella cases for Bangladesh and Fiji?
 
 These questions can be addressed using supplemental data:
 
@@ -38,6 +38,12 @@ These questions can be addressed using supplemental data:
 
 ## Visualizations
 
+```{r}
+#| code-fold: true
+
+knitr::include_graphics("p1c1_1.png")
+knitr::include_graphics("p1c1_2.png")
+```
 
 
 
