@@ -1,0 +1,65 @@
+---
+title: "Project 1: Checkpoint 2"
+author: "Hailey Hossain"
+format: html
+embed-resources: true
+editor: source
+code-tools: true
+execute:
+  warning: false
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+```
+
+```{r}
+cases_month <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
+cases_year <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
+```
+
+How do the lab-confirmed cases of measles in Italy compare across each specific month from 2012 to 2025?
+
+```{r}
+monthly_lab_confirmed_measles <- function(country_in) {
+  
+  cases_month |> 
+    filter(country == country_in) |> 
+    group_by(month) |> 
+    summarize(total_lab_confirmed = sum(measles_lab_confirmed))
+  
+}
+
+monthly_lab_confirmed_measles("Italy") |> 
+  mutate(month = case_when(month == 1 ~ "January", 
+                           month == 2 ~ "February", 
+                           month == 3 ~ "March", 
+                           month == 4 ~ "April", 
+                           month == 5 ~ "May", 
+                           month == 6 ~ "June", 
+                           month == 7 ~ "July", 
+                           month == 8 ~ "August", 
+                           month == 9 ~ "September", 
+                           month == 10 ~ "October", 
+                           month == 11 ~ "November", 
+                           month == 12 ~ "December")) |> 
+  kable(col.names = c("**Month**", "**Lab-Confirmed Measles Cases**"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
