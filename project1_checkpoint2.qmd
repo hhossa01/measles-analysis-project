@@ -1,6 +1,5 @@
 ---
 title: "Project 1: Checkpoint 2"
-author: "Hailey Hossain"
 format: html
 embed-resources: true
 editor: source
@@ -16,12 +15,28 @@ library(knitr)
 library(kableExtra)
 ```
 
+## The Data
+
 ```{r}
 cases_month <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
 cases_year <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
 ```
 
-How do the lab-confirmed cases of measles in Italy compare across each specific month from 2012 to 2025?
+## Context of the Data
+
+This project is centered around the data set that focuses on measles and rubella cases across the world. It was downloaded from the provisional monthly measles and rubella data of the World Health Organization on 2025-06-12. The data spans across 194 countries and is separated into two different sets, one representing measles cases on a monthly timeline and one representing measles cases on a yearly timeline. Both sets have many of the same variables, however `cases_month` reports the case numbers in terms of per month for each country and `cases_year` reports the case numbers in terms of total per year for each country as well as some population proportions.
+
+## Data Cleaning
+
+The cleaning script for the data shows that a majority of the cleaning was purposed for fixing data types and renaming variables to names with clearer context. 
+
+For `cases_month`, the janitor package was used to clean variable names and the dplyr package was used to change `year` to a numeric data type. 
+
+For `cases_year`, variable names were manually changed to represent specifically what each variable was. The first row of the spreadsheet was converted to become the column names using `row_to_names(1)`.
+
+## Two Summaries with Existing Columns
+
+**RQ1: How do the lab-confirmed cases of measles in Italy compare across each specific month from 2012 to 2025?**
 
 ```{r}
 monthly_lab_confirmed_measles <- function(country_in) {
@@ -49,6 +64,91 @@ monthly_lab_confirmed_measles("Italy") |>
   kable(col.names = c("**Month**", "**Lab-Confirmed Measles Cases**"))
 ```
 
+**RQ2: Are measles cases becoming more concentrated in a smaller number of countries over time?**
+
+```{r}
+#Total global cases per year
+global_totals <- cases_year %>%
+  group_by(year) %>%
+  summarize(global_cases = sum(measles_total, na.rm = TRUE))
+
+#Top 10 countries per year
+top10 <- cases_year %>%
+  group_by(year) %>%
+  arrange(year, desc(measles_total)) %>%
+  slice_head(n = 10) %>%
+  summarize(top10_cases = sum(measles_total, na.rm = TRUE))
+
+#Concentration
+concentration <- left_join(global_totals, top10, by = "year") %>%
+  mutate(top10_share = top10_cases / global_cases)
+
+#Plot
+ggplot(concentration, aes(x = year, y = top10_share)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  labs(
+    title = "Concentration of Measles Cases Over Time",
+    subtitle = "Share of Global Cases from Top 10 Countries",
+    x = "Year",
+    y = "Proportion of Global Cases (Top 10 Countries)"
+  ) +
+  theme_minimal()
+```
+
+## Two Summaries with Modified Columns
+
+**RQ3: How do measles case outcomes differ across regions and years?**
+
+```{r}
+calc_measles_case_quality <- function(df) {
+  df |>
+    mutate(
+      clinical_rate = measles_clinical / measles_total,
+      epi_link_rate = measles_epi_linked / measles_total,
+      lab_confirm_rate = measles_lab_confirmed / measles_total
+    )
+}
+
+cases_month |>
+  calc_measles_case_quality() |>
+  group_by(region, year) |>
+  summarize(
+    avg_clinical_rate = mean(clinical_rate,  na.rm = TRUE),
+    avg_epi_link_rate = mean(epi_link_rate, na.rm = TRUE),
+    avg_lab_confirm_rate = mean(lab_confirm_rate,  na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  kable()
+```
+
+**RQ4: How do typical seasonal pattern of measles cases look across regions?**
+
+```{r}
+calc_monthly_avg <- function(region_name, df) {
+  df |>
+    filter(region == region_name) |>
+    group_by(month) |>
+    summarize(
+      avg_measles_total = mean(measles_total, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    mutate(
+      prop_annual_cases = avg_measles_total / sum(avg_measles_total),
+      region = region_name
+    )
+}
+
+regions <- cases_month |>
+  distinct(region) |>
+  pull(region)
+
+regions |>
+  map(calc_monthly_avg, df = cases_month) |>
+  list_rbind() |>
+  arrange(region, month) |> 
+  kable()
+```
 
 
 
