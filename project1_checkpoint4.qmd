@@ -1,0 +1,70 @@
+---
+title: "Project 1: Checkpoint 4"
+format: html
+embed-resources: true
+editor: source
+code-tools: true
+execute:
+  warning: false
+---
+
+```{r}
+#| label: packages-setup
+#| message: false
+#| warning: false
+
+library(httr)
+library(tidyjson)
+library(jsonlite)
+library(tidyverse)
+library(glue)
+library(lubridate)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(scales)
+```
+
+```{r}
+cases_month <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
+cases_year <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
+```
+
+## Two Visualizations
+
+**Measles vs. Covid-19 Cases in 2020**
+
+**Concentration of Measles Cases Across Countries**
+
+```{r}
+ggplot(cases_month, aes(x = year, y = measles_total)) +
+  geom_hex(bins = 10) +
+  scale_fill_continuous(palette = "PurpOr") +
+  labs(
+    title = "Concentration of Measles Cases Over Time",
+    subtitle = "Total Global Cases by Year",
+    x = "Year",
+    y = "Total Measles Cases", 
+    fill = "Count"
+  ) +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
