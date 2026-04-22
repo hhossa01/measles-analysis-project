@@ -104,7 +104,7 @@ countries <- unique(cases_year$country)
 The data set being loaded below came from API Ninjas, and it is the Covid-19 API. It contains historical data on Covid-19 cases for every country in the world. Each row is a country and each column is a date (of one single day) and what type of Covid-19 case it is (e.g. total, new cases that day). For example, one of the columns represents the new Covid-19 cases recorded on March 12, 2020. After pulling the data for all countries, we cleaned the set to represent the total number of cases of Covid-19 by month. Instead of each column representing a single day, each column now represents a single month of the given year (e.g. January 2020, August 2023).
 
 ```{r}
-get_country_data <- function(country) {
+get_country_data <- function(country, key = my_key) {
   if (str_detect(country, " ")) {
     country = str_replace_all(country, " ", "%20")
   }
@@ -112,7 +112,7 @@ get_country_data <- function(country) {
   base_url <- "https://api.api-ninjas.com/v1/covid19"
   url <- glue("{base_url}?country={country}")
 
-  response <- GET(url, add_headers("X-Api-Key" = my_key))
+  response <- GET(url, add_headers("X-Api-Key" = key))
 
   if (status_code(response) != 200) {
     warning(glue("Failed to fetch data for {country}: HTTP {status_code(response)}"))
@@ -136,6 +136,8 @@ safe_get_country_data <- safely(get_country_data)
 ```
 
 ```{r}
+#| eval: false
+
 country_df <- map(countries, safe_get_country_data) |>
   map("result") |>        # Extract just the result
   compact() |>            # Drop NULLs
@@ -161,12 +163,16 @@ covid_cleaned_df <- country_df |>
   )
 ```
 
+```{r}
+covid_cleaned_df <- read.csv("covid_cleaned.csv")
+```
+
 **GDP Data**
 
 The data set being loaded below came from API Ninjas, and it is the GDP API. It contains historical and current data on the Gross Domestic Product of countries around the world. The columns of the data set represent the growth of GDP, nominal GDP, and purchasing power parity. A few columns also have these variables in terms of per capita.
 
 ```{r}
-get_country_gdp <- function(country) {
+get_country_gdp <- function(country, key = my_key) {
   
   if (str_detect(country, " ")) {
     country = str_replace_all(country, " ", "%20")
@@ -175,7 +181,7 @@ get_country_gdp <- function(country) {
   base_url <- "https://api.api-ninjas.com/v1/gdp"
   url <- glue("{base_url}?country={country}")
 
-  response <- GET(url, add_headers("X-Api-Key" = my_key))
+  response <- GET(url, add_headers("X-Api-Key" = key))
 
   if (status_code(response) != 200) {
     warning(glue("Failed to fetch data for {country}: HTTP {status_code(response)}"))
@@ -195,10 +201,16 @@ get_country_gdp <- function(country) {
 ```
 
 ```{r}
+#| eval: false
+
 country_gdp <- map(countries, safely(get_country_gdp)) |>
   map("result") |>        # Extract just the result
   compact() |>            # Drop NULLs
   bind_rows()
+```
+
+```{r}
+country_gdp <- read.csv("country_gdp.csv")
 ```
 
 **Joined Data**
