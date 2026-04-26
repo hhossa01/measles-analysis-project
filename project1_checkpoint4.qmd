@@ -12,6 +12,7 @@ execute:
 #| label: packages-setup
 #| message: false
 #| warning: false
+#| code-fold: true
 
 library(httr)
 library(tidyjson)
@@ -25,33 +26,104 @@ library(kableExtra)
 library(scales)
 ```
 
+## The Data
+
 ```{r}
 cases_month <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
 cases_year <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
+```
+
+```{r}
+covid_cleaned_df <- read.csv("covid_cleaned.csv")
+country_gdp <- read.csv("country_gdp.csv")
 ```
 
 ## Two Visualizations
 
 **Measles vs. Covid-19 Cases in 2020**
 
+```{r}
+#| code-fold: true
+#| fig-alt: "Horizontal bar graph comparing Covid-19 and measles cases in the 10 countries with the highest count of Covid-19 cases. Covid-19 cases significantly outnumber the measles cases."
+
+measles_2020 <- cases_year |>
+  filter(year == 2020) |>
+  select(country, measles_total_2020 = measles_total)
+
+covid_2020 <- covid_cleaned_df |>
+  select(country, starts_with("X2020")) |>
+  rowwise() |>
+  mutate(covid_total_2020 = max(c_across(starts_with("X2020")), 
+                                na.rm = TRUE)) |>
+  ungroup() |>
+  select(country, covid_total_2020)
+
+comparison_2020 <- inner_join(measles_2020, covid_2020, by = "country") |>
+  arrange(desc(covid_total_2020)) |>
+  slice_head(n = 10) |>
+  pivot_longer(cols = c(measles_total_2020, covid_total_2020), 
+               names_to = "disease", values_to = "cases") |>
+  mutate(disease = case_when(disease == "measles_total_2020" ~ "Measles", 
+                             disease == "covid_total_2020"   ~ "COVID-19"), 
+         country = fct_reorder(country, cases, .fun = max))
+
+ggplot(comparison_2020, aes(y = country, x = cases, fill = disease)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+  scale_x_log10(labels = label_number(scale_cut = cut_short_scale()), 
+                breaks = 10^(0:8)) +
+  scale_fill_manual(values = c("COVID-19" = "#D85A30", 
+                               "Measles" = "#1D9E75")) +
+  labs(title    = "Measles vs. COVID-19 Cases in 2020", 
+       subtitle = "Top 10 countries by COVID-19 case count — log scale",
+       x = "Total Cases (log scale)", y = NULL, fill = NULL) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top", panel.grid.major.y = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.text.y = element_text(size = 10))
+```
+
 **Concentration of Measles Cases Across Countries**
 
 ```{r}
-ggplot(cases_month, aes(x = year, y = measles_total)) +
-  geom_hex(bins = 10) +
-  scale_fill_continuous(palette = "PurpOr") +
-  labs(
-    title = "Concentration of Measles Cases Over Time",
-    subtitle = "Total Global Cases by Year",
-    x = "Year",
-    y = "Total Measles Cases", 
-    fill = "Count"
-  ) +
-  theme_minimal()
+#| code-fold: true
+#| fig-alt: "Lollipop plot showing the total number of measles cases in all countries by year.  Most years have similar totals, however there is a significant peak in 2019."
+
+global_totals <- cases_month |> 
+  group_by(year) |> 
+  summarize(total_cases = sum(measles_total, na.rm = TRUE))
+
+ggplot(global_totals, aes(x = year, y = total_cases)) + 
+  geom_segment(aes(yend = 0, 
+                   xend = year), 
+               color = "purple2") + 
+  geom_point(size = 4, color = "purple4") + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  theme_minimal() + 
+  labs(x = "Year", y = "Total Cases", 
+       title = "Measles Cases Across the World Over Time", 
+       subtitle = "Total Count of Global Cases by Year")
 ```
 
+This lollipop plot visualizes the spread of total measles cases across the world by year. The peak in this graph is occurring at 2019. In the final report, we will explore further why this peak is happening and if there is a specific country that is responsible.
 
+## Statistical Model
 
+**RQ: Do lab-confirmed measles cases or lab-confirmed rubella cases have a significant impact on GDP growth in a country?**
+
+To answer this research question, the model below fits a linear regression model between GDP growth and the total number of measles and rubella cases.
+
+```{r}
+cases_gdp_join <- inner_join(cases_year, country_gdp, 
+                             by = join_by(year, iso3 == country_code))
+cases_model <- lm(gdp_growth ~ measles_lab_confirmed + rubella_lab_confirmed, 
+                  data = cases_gdp_join)
+```
+
+```{r}
+summary(cases_model)
+```
+
+As seen by the summary of the linear model above, lab-confirmed measles cases have a statistically significant impact on GDP growth in countries. This is shown through the relationship between GDP growth and lab-confirmed measles cases having a p-value of 0.0454 (<0.05). On the other hand, lab-confirmed rubella cases do not have a statistically significant impact on GDP growth in countries, as shown by a p-value of 0.4286 (>0.05).
 
 
 
