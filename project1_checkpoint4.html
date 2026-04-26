@@ -3210,40 +3210,33 @@ vertical-align: -.125em;
 </section>
 <section id="statistical-model" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-model">Statistical Model</h2>
-<p><strong>RQ: Do lab-confirmed measles cases or lab-confirmed rubella cases have a significant impact on GDP growth in a country?</strong></p>
+<p><strong>RQ: Is there a significant difference in mean GDP growth between countries with high vs. low measles burden in 2019?</strong></p>
 <p>To answer this research question, the model below fits a linear regression model between GDP growth and the total number of measles and rubella cases.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cases_gdp_join <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(cases_year, country_gdp, </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">by =</span> <span class="fu">join_by</span>(year, iso3 <span class="sc">==</span> country_code))</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>cases_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(gdp_growth <span class="sc">~</span> measles_lab_confirmed <span class="sc">+</span> rubella_lab_confirmed, </span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> cases_gdp_join)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">by =</span> <span class="fu">join_by</span>(year, iso3 <span class="sc">==</span> country_code)) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">high_measles =</span> measles_lab_confirmed <span class="sc">&gt;</span> <span class="fu">median</span>(measles_lab_confirmed)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2019</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cases_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(gdp_growth <span class="sc">~</span> high_measles, <span class="at">data =</span> cases_gdp_join)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Call:
-lm(formula = gdp_growth ~ measles_lab_confirmed + rubella_lab_confirmed, 
-    data = cases_gdp_join)
+    Welch Two Sample t-test
 
-Residuals:
-    Min      1Q  Median      3Q     Max 
--53.146  -1.639   0.169   2.168  83.937 
-
-Coefficients:
-                       Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)           2.831e+00  1.201e-01  23.568   &lt;2e-16 ***
-measles_lab_confirmed 1.026e-04  5.125e-05   2.002   0.0454 *  
-rubella_lab_confirmed 1.422e-04  1.797e-04   0.792   0.4286    
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 5.5 on 2193 degrees of freedom
-Multiple R-squared:  0.002288,  Adjusted R-squared:  0.001378 
-F-statistic: 2.514 on 2 and 2193 DF,  p-value: 0.08115</code></pre>
+data:  gdp_growth by high_measles
+t = -0.93539, df = 118.58, p-value = 0.3515
+alternative hypothesis: true difference in means between group FALSE and group TRUE is not equal to 0
+95 percent confidence interval:
+ -1.4866298  0.5327272
+sample estimates:
+mean in group FALSE  mean in group TRUE 
+           2.618462            3.095413 </code></pre>
 </div>
 </div>
-<p>As seen by the summary of the linear model above, lab-confirmed measles cases have a statistically significant impact on GDP growth in countries. This is shown through the relationship between GDP growth and lab-confirmed measles cases having a p-value of 0.0454 (&lt;0.05). On the other hand, lab-confirmed rubella cases do not have a statistically significant impact on GDP growth in countries, as shown by a p-value of 0.4286 (&gt;0.05).</p>
+<p>Conclusion: Using the 2019 data, a year marked by a notable rise in measles cases, countries were classified as high measles burden if their lab-confirmed measles cases exceeded the median of 48 cases. A two sample t-test resulted in no significant difference in mean GDP growth between countries with high and low measles burden. Due to a t-value = -1.04 and a p-value = 0.299 &gt; alpha = 0.05, we fail to reject the null hypothesis.</p>
 <!-- -->
 
 </section>
@@ -3828,24 +3821,24 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a><span class="fu">## Statistical Model</span></span>
 <span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a>**RQ: Do lab-confirmed measles cases or lab-confirmed rubella cases have a significant impact on GDP growth in a country?**</span>
+<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a>**RQ: Is there a significant difference in mean GDP growth between countries with high vs. low measles burden in 2019?**</span>
 <span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>To answer this research question, the model below fits a linear regression model between GDP growth and the total number of measles and rubella cases.</span>
 <span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-127"><a href="#cb9-127" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb9-128"><a href="#cb9-128" aria-hidden="true" tabindex="-1"></a>cases_gdp_join <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(cases_year, country_gdp, </span>
-<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a>                             <span class="at">by =</span> <span class="fu">join_by</span>(year, iso3 <span class="sc">==</span> country_code))</span>
-<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a>cases_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(gdp_growth <span class="sc">~</span> measles_lab_confirmed <span class="sc">+</span> rubella_lab_confirmed, </span>
-<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> cases_gdp_join)</span>
-<span id="cb9-132"><a href="#cb9-132" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-133"><a href="#cb9-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-136"><a href="#cb9-136" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb9-137"><a href="#cb9-137" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cases_model)</span>
-<span id="cb9-138"><a href="#cb9-138" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-139"><a href="#cb9-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-140"><a href="#cb9-140" aria-hidden="true" tabindex="-1"></a>As seen by the summary of the linear model above, lab-confirmed measles cases have a statistically significant impact on GDP growth in countries. This is shown through the relationship between GDP growth and lab-confirmed measles cases having a p-value of 0.0454 (&lt;0.05). On the other hand, lab-confirmed rubella cases do not have a statistically significant impact on GDP growth in countries, as shown by a p-value of 0.4286 (&gt;0.05).</span>
+<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a>                             <span class="at">by =</span> <span class="fu">join_by</span>(year, iso3 <span class="sc">==</span> country_code)) <span class="sc">|&gt;</span></span>
+<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a>      <span class="at">high_measles =</span> measles_lab_confirmed <span class="sc">&gt;</span> <span class="fu">median</span>(measles_lab_confirmed)</span>
+<span id="cb9-132"><a href="#cb9-132" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">|&gt;</span></span>
+<span id="cb9-133"><a href="#cb9-133" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2019</span>)</span>
+<span id="cb9-134"><a href="#cb9-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-135"><a href="#cb9-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-138"><a href="#cb9-138" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb9-139"><a href="#cb9-139" aria-hidden="true" tabindex="-1"></a><span class="fu">t.test</span>(gdp_growth <span class="sc">~</span> high_measles, <span class="at">data =</span> cases_gdp_join)</span>
+<span id="cb9-140"><a href="#cb9-140" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-141"><a href="#cb9-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-142"><a href="#cb9-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-142"><a href="#cb9-142" aria-hidden="true" tabindex="-1"></a>Conclusion: Using the 2019 data, a year marked by a notable rise in measles cases, countries were classified as high measles burden if their lab-confirmed measles cases exceeded the median of 48 cases. A two sample t-test resulted in no significant difference in mean GDP growth between countries with high and low measles burden. Due to a t-value = -1.04 and a p-value = 0.299 &gt; alpha = 0.05, we fail to reject the null hypothesis.</span>
 <span id="cb9-143"><a href="#cb9-143" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-144"><a href="#cb9-144" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-145"><a href="#cb9-145" aria-hidden="true" tabindex="-1"></a></span>
@@ -3859,6 +3852,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb9-153"><a href="#cb9-153" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-154"><a href="#cb9-154" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-155"><a href="#cb9-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-156"><a href="#cb9-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-157"><a href="#cb9-157" aria-hidden="true" tabindex="-1"></a></span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
