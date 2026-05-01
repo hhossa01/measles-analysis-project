@@ -1,0 +1,238 @@
+---
+title: "Project 1: Final"
+author: "Hailey Hossain and Brandon Montalvo"
+format: html
+embed-resources: true
+code-fold: true
+editor: source
+code-tools: true
+theme: journal
+execute:
+  warning: false
+---
+
+```{r}
+#| label: packages-setup
+#| message: false
+
+library(httr)
+library(tidyverse)
+library(tidyjson)
+library(jsonlite)
+library(tidyverse)
+library(glue)
+library(lubridate)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(scales)
+library(broom)
+library(gt)
+```
+
+## The Data
+
+```{r}
+cases_month <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
+cases_year <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
+```
+
+```{r}
+covid_cleaned_df <- read.csv("covid_cleaned.csv")
+country_gdp <- read.csv("country_gdp.csv")
+```
+
+The main data examined in this study focuses on measles and rubella cases across the world. There are two versions of this data: one that organizes data by month and one that organizes data by year. It was downloaded from the provisional monthly measles and rubella data of the World Health Organization on 2025-06-12. The World Health Organization collected this data from January 2012 to June 2025, and each observation recorded is a country at the specified month or year. The purpose of WHO collecting disease-specific data such as this is to track global outbreaks and aid policy decisions.
+
+Supplemental data was also used in this study to analyze trends and possible correlations. One of these data sets was focused on hisotrical Covid-19 data from across the world; it contains the total number of Covid-19 cases in each country from January 2020 to March 2023. This data was accessed via a secondary website, called API Ninjas, that collects various sets of data. API Ninjas most likely obtained this data and any country or health-based data from public census data. The second supplemental data set was focused on the Gross Domestic Product (GDP) of each country by year; it was collected from 1980 to 2026, as well as projected up to 2029. This data was also accessed via API Ninjas.
+
+## Research Questions
+
+**RQ1:** .
+
+**RQ2:** How does the total number of measles cases compare to the total number of Covid-19 cases across countries by year?
+
+**RQ3:** Is there a significant difference in mean GDP growth between countries with high vs. low measles burden in 2019?
+
+## Data Summaries and Visualizations
+
+### RQ1
+.
+
+### RQ2
+
+How does the total number of measles cases compare to the total number of Covid-19 cases across countries by year?
+
+```{r}
+#| label: rq2 summary 1 function
+
+measles_covid_compare <- function(year1, m_df = cases_year, 
+                                  c_df = covid_cleaned_df){
+  
+  measles_year <- m_df |>
+    filter(year == year1) |>
+    select(country, measles_total_year = measles_total)
+  
+  covid_year <- c_df |>
+    select(country, starts_with(glue("X{year1}"))) |>
+    rowwise() |>
+    mutate(covid_total_year = max(c_across(starts_with(glue("X{year1}"))), 
+                                  na.rm = TRUE)) |>
+    ungroup() |>
+    select(country, covid_total_year)
+  
+  comparison_year <- inner_join(measles_year, covid_year, by = "country") |>
+    arrange(desc(covid_total_year)) |>
+    slice_head(n = 10) |>
+    pivot_longer(cols = c(measles_total_year, covid_total_year), 
+                 names_to = "disease", values_to = "cases") |>
+    mutate(disease = case_when(disease == glue("measles_total_year") 
+                               ~ "Measles", 
+                               disease == glue("covid_total_year") 
+                               ~ "COVID-19"), 
+           country = fct_reorder(country, cases, .fun = max))
+  
+  return(comparison_year)
+  
+}
+```
+
+```{r}
+#| label: rq2 summary table1
+
+compare2020 <- measles_covid_compare(2020) |> 
+  pivot_wider(names_from = disease, 
+              values_from = cases) |> 
+  rename("Measles_20" = "Measles", 
+         "COVID-19_20" = "COVID-19")
+compare2022 <- measles_covid_compare(2022) |> 
+  pivot_wider(names_from = disease, 
+              values_from = cases) |> 
+  rename("Measles_22" = "Measles", 
+         "COVID-19_22" = "COVID-19")
+
+inner_join(compare2020, compare2022, by = "country") |> 
+  gt() |> 
+  tab_spanner(
+    label = "2020",
+    columns = c("Measles_20", "COVID-19_20")
+  ) |> 
+  tab_spanner(
+    label = "2022",
+    columns = c("Measles_22", "COVID-19_22")
+  ) |> 
+  tab_header(
+    title = "Total Measles and COVID-19 Cases by Country", 
+    subtitle = "Countries with Highest Concentration of COVID-19 Cases in 2020 and 2022"
+  ) |> 
+  tab_caption(
+    caption = "Figure 5: Table 3"
+  ) |> 
+  cols_label(
+    country = "Country", 
+    "Measles_20" = "Measles", "Measles_22" = "Measles", 
+    "COVID-19_20" = "COVID-19", "COVID-19_22" = "COVID-19"
+  ) |> 
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  )
+```
+
+```{r}
+#| label: rq2 summary table2
+
+```
+
+```{r}
+#| label: rq2 visualization1
+#| fig-alt: "Horizontal bar graph comparing Covid-19 and measles cases in the 10 countries with the highest count of Covid-19 cases. Covid-19 cases significantly outnumber the measles cases."
+
+measles_covid_compare(2020) |> 
+  ggplot(aes(y = country, x = cases, fill = disease)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    scale_x_log10(labels = label_number(scale_cut = cut_short_scale()), 
+                  breaks = 10^(0:8)) +
+    scale_fill_manual(values = c("COVID-19" = "#D85A30", 
+                                 "Measles" = "#1D9E75")) +
+    labs(title    = "Measles vs. COVID-19 Cases in 2020", 
+         subtitle = "Top 10 countries by COVID-19 case count — log scale",
+         x = "Total Cases (log scale)", y = NULL, fill = NULL) +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "top", panel.grid.major.y = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          axis.text.y = element_text(size = 10))
+```
+
+```{r}
+#| label: rq2 visualization2
+
+```
+
+## Data Model
+
+**RQ3:** Is there a significant difference in mean GDP growth between countries with high vs. low measles burden in 2019?
+
+To answer this research question, the model below fits a linear regression model between GDP growth and the total number of measles and rubella cases.
+
+```{r}
+cases_gdp_join <- inner_join(cases_year, country_gdp, 
+                             by = join_by(year, iso3 == country_code)) |>
+    mutate(
+      high_measles = measles_lab_confirmed > median(measles_lab_confirmed)
+      ) |>
+  filter(year == 2019)
+```
+
+```{r}
+tt <- t.test(gdp_growth ~ high_measles, data = cases_gdp_join)
+```
+
+```{r}
+#| label: "t-test table"
+
+tidy(tt) |>
+  mutate(alternative = "Two-sided test (μ₁ ≠ μ₂)") |>
+  gt() |>
+  tab_header(
+    title = md("**Two-Sample t-test Results**"),
+    subtitle = "Comparison of mean GDP growth between high and low measles burden countries in 2019"
+    ) |>
+  cols_label(
+    estimate1 = "Mean GDP growth (Low Measles)",
+    estimate2 = "Mean GDP growth (High Measles)",
+    statistic = "t statistic",
+    parameter = "df",
+    p.value = "p-value",
+    estimate = "Mean difference",
+    conf.low = "CI lower",
+    conf.high = "CI upper",
+    method = "Method",
+    alternative = "Alternative Hypothesis"
+  ) |>
+  fmt_number(columns = everything(), decimals = 4)
+```
+
+Conclusion: Using the 2019 data, a year marked by a notable rise in measles cases, countries were classified as high measles burden if their lab-confirmed measles cases exceeded the median of 48 cases. A two sample t-test resulted in no significant difference in mean GDP growth between countries with high and low measles burden. Due to a t-value = -1.04 and a p-value = 0.299 > alpha = 0.05, we fail to reject the null hypothesis.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
