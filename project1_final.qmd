@@ -50,7 +50,7 @@ Supplemental data was also used in this study to analyze trends and possible cor
 
 **RQ1:** How does the concentration of measles compare across countries?
 
-**RQ2:** How does the total number of measles cases compare to the total number of Covid-19 cases across countries by year?
+**RQ2:** Did measles reporting drop during the COVID‑19 pandemic (2020-2021), and does the later rebound suggest it was suppressed?
 
 **RQ3:** Is there a significant difference in mean GDP growth between countries with high vs. low measles burden in 2019?
 
@@ -350,7 +350,35 @@ India leads by a wide margin, recording the highest total number of cases across
 
 ### RQ2
 
-How does the total number of measles cases compare to the total number of Covid-19 cases across countries by year?
+Did measles reporting drop during the COVID‑19 pandemic (2020-2021), and does the later rebound suggest it was suppressed?
+
+The graph below represents the total measles case count worldwide from 2019 to 2023. Madagascar is excluded from this figure as its 2019 outbreak (39.4% of global cases) would otherwise dominate the baseline, masking the global trend of interest.
+
+```{r}
+#| label: intro visual
+#| fig-alt: "Line graph showing the total reported cases of measles across the world from 2019 to 2023. There is a significant drop in number of cases from 2019 to 2020, and the number of cases does not rish again until 2023."
+
+cases_year |>
+  filter(between(year, 2019, 2023), country != "Madagascar") |>
+  group_by(year) |>
+  summarize(total_cases = sum(measles_total, na.rm = TRUE)) |>
+  ggplot(aes(x = year, y = total_cases)) +
+  geom_line(color = "tomato1", linewidth = 1) +
+  geom_point(size = 3, color = "tomato1") +
+  scale_y_continuous(labels = scales::label_comma()) +
+  scale_x_continuous(breaks = 2019:2023) +
+  labs(
+    title = "Global Measles Cases Declined After the 2019 Surge",
+    subtitle = "Total reported cases, 2019–2023", 
+    caption = "Figure 5: Visualization 3",
+    x = NULL, y = "Total Cases"
+  ) +
+  theme_minimal()
+```
+
+There is a significant drop in measles cases after 2019, more specifically from 2020-2022. These years align with the timeline of the COVID-19 pandemic, hinting at a possible correlation that will be explored further.
+
+The table below takes the top 8 countries with the highest concentration of COVID-19 cases in 2020 and 2022 and compares the total count of COVID-19 cases to the total count of measles cases in these years.
 
 ```{r}
 #| label: rq2 summary 1 function
@@ -417,7 +445,7 @@ inner_join(compare2020, compare2022, by = "country") |>
     subtitle = "Countries with Highest Concentration of COVID-19 Cases in 2020 and 2022"
   ) |> 
   tab_caption(
-    caption = "Figure 5: Table 3"
+    caption = "Figure 6: Table 3"
   ) |> 
   cols_label(
     country = "Country", 
@@ -429,6 +457,10 @@ inner_join(compare2020, compare2022, by = "country") |>
     locations = cells_column_labels()
   )
 ```
+
+COVID-19 cases clearly outnumber measles cases in both 2020 and 2022 by millions of cases. There are two explanations for this: there is an overall lower total number of measles cases in countries or there is a drop in reporting of measles cases due to more focus on the reporting of COVID-19 cases. If we focus on the countries included in Figure 6 we can also see that half of the countries are apart of the European Region (EUR) with the others being apart of the South-East Asia Region (SEAR) and the Region of the Americas (AMR).
+
+The next table below compares the average number of COVID-19 cases across regions in 2020 and 2022. The mean number of the total cases in each country was taken for each region, both in 2020 when the COVID-19 pandemic first hit and in 2022 when the aftermath of the pandemic was being considered.
 
 ```{r}
 #| label: rq2 summary 2 function
@@ -471,7 +503,7 @@ means_joined |>
     subtitle = "Comparison of Mean Cases by Region in 2020 and 2022"
   ) |> 
   tab_caption(
-    caption = "Figure 6: Table 4"
+    caption = "Figure 7: Table 4"
   ) |> 
   cols_label(
     region = "Region", 
@@ -483,30 +515,13 @@ means_joined |>
   )
 ```
 
+The clear outlier in Figure 7 is the South-East Asia Region which in 2020 reach an average of 1.3 million COVID-19 cases while the other regions stay in the range of tens of thousands to hundreds of thousands of average cases and no others breaking into the millions. This pattern carried over to 2022 where SEAR is still the leading region in average COVID-19 cases; though, most of the other regions have now reached the millions in terms of average cases. Another pattern that has been consistent through Table 3 and Table 4 is that the aftermath of the COVID-19 pandemic (represented through the year 2022) has higher total counts of cases and higher average counts of cases; this suggests a higher priority put on reporting COVID-19 cases rather than measles cases.
+
+The results of Table 4 can be more clearly represented through the grouped lollipop chart below. Each region is separated from one another, and there are two segments in each group representing the years 2020 and 2022.
+
 ```{r}
 #| label: rq2 visualization1
-#| fig-alt: "Horizontal bar graph comparing Covid-19 and measles cases in the 10 countries with the highest count of Covid-19 cases. Covid-19 cases significantly outnumber the measles cases."
-
-measles_covid_compare(2020) |> 
-  ggplot(aes(y = country, x = cases, fill = disease)) +
-    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
-    scale_x_log10(labels = label_number(scale_cut = cut_short_scale()), 
-                  breaks = 10^(0:8)) +
-    scale_fill_manual(values = c("COVID-19" = "#D85A30", 
-                                 "Measles" = "#1D9E75")) +
-    labs(title    = "Measles vs. COVID-19 Cases in 2020", 
-         subtitle = "Top 10 countries by COVID-19 case count — log scale",
-         x = "Total Cases (log scale)", y = NULL, fill = NULL, 
-         caption = "Figure 7: Visualization 3") +
-    theme_minimal(base_size = 12) +
-    theme(legend.position = "top", panel.grid.major.y = element_blank(), 
-          panel.grid.minor = element_blank(), 
-          axis.text.y = element_text(size = 10))
-```
-
-```{r}
-#| label: rq2 visualization2
-#| fig-alt: "."
+#| fig-alt: "Grouped lollipop chart separated by the different regions. The South-East Asia Region and European Region have clear spikes in mean COVID-19 cases, specifically in 2022."
 
 means_joined |> 
   rename("2020" = covid_mean.x, "2022" = covid_mean.y) |> 
@@ -527,6 +542,33 @@ means_joined |>
        subtitle = "Comparison Between 2020 and 2022", 
        caption = "Figure 8: Visualization 4")
 ```
+
+As expected from the results of Table 4, Figure 8 shows a dominance of mean COVID-19 cases from the South-East Asia Region and the European Region. Across all regions, the average number of cases in 2022 is higher than the average number of cases in 2020.
+
+The differing reporting of COVID-19 and measles cases mentioned previously is represented in the horizontal bar graph below, once again returning to the top countries with the highest concentrations of COVID-19 cases. Due to COVID-19 cases outnumbering measles cases by several orders of magnitude, the x-axis uses a log scale in order for both diseases to remain visible.
+
+```{r}
+#| label: rq2 visualization2
+#| fig-alt: "Horizontal bar graph comparing Covid-19 and measles cases in the 10 countries with the highest count of Covid-19 cases. Covid-19 cases significantly outnumber the measles cases."
+
+measles_covid_compare(2020) |> 
+  ggplot(aes(y = country, x = cases, fill = disease)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    scale_x_log10(labels = label_number(scale_cut = cut_short_scale()), 
+                  breaks = 10^(0:8)) +
+    scale_fill_manual(values = c("COVID-19" = "#D85A30", 
+                                 "Measles" = "#1D9E75")) +
+    labs(title    = "Measles vs. COVID-19 Cases in 2020", 
+         subtitle = "Top 10 countries by COVID-19 case count — log scale",
+         x = "Total Cases (log scale)", y = NULL, fill = NULL, 
+         caption = "Figure 9: Visualization 5") +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "top", panel.grid.major.y = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          axis.text.y = element_text(size = 10))
+```
+
+Figure 9 once again showcases the outnumbering of reported COVID-19 cases to measles cases in 2020 when the COVID-19 pandemic was in full-force. Even with the x-axis on a log scale, the difference is clear. Measles cases only reach up to around ten thousand cases on a log scale while COVID-19 cases reach up to ten million cases on a log scale.
 
 ## Statistical Model
 
