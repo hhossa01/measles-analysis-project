@@ -163,7 +163,7 @@ tt <- t.test(gdp_growth ~ high_measles, data = cases_gdp_join)
 
 ## Data and Explanations
 
-### Data Context & Research Question {height="50%"}
+### Data Context & Research Question {height="30%"}
 
 ::: panel-tabset
 ## Measles Data
@@ -179,78 +179,9 @@ The main data examined in this study focuses on **measles and rubella cases** ac
 How does the **concentration** of measles compare across **countries**?
 :::
 
-### RQ1 Explanations {height="50%"}
-::: {.card title="Density Map"}
-
-map here
-
-:::
-
-## Visualizations
-
-::: {.card title="Tables and Graphs"}
+### Tables {height="70%"}
+::: {.card}
 ::: panel-tabset
-## Lollipop Graph
-
-</br>
-
-```{r}
-#| label: lollipop graph
-#| fig-alt: "A lollipop plot showing annual deviation of global measles cases from the 2013–2023 mean, where 2019 stands out dramatically above all other years as the largest single-year surge in the study period."
-
-global_totals <- cases_year |>
-  filter(between(year, 2013, 2023)) |>
-  group_by(year) |>
-  summarize(total_cases = sum(measles_total, na.rm = TRUE)) |>
-  mutate(
-    mean_cases = mean(total_cases),
-    deviation = total_cases - mean_cases,
-    above_avg = deviation > 0,
-    is_2019 = year == 2019
-  )
-
-madagascar_2019_share <- cases_year |>
-  filter(year == 2019) |>
-  mutate(global_total = sum(measles_total, na.rm = TRUE),
-         share = measles_total / global_total) |>
-  filter(country == "Madagascar") |>
-  pull(share) |>
-  scales::percent(accuracy = 0.1)
-
-
-ggplot(global_totals, aes(x = year, y = deviation)) +
-  geom_hline(yintercept = 0, linetype = "dashed", 
-             color = "gray50") +
-  geom_segment(aes(xend = year, yend = 0, color = above_avg), 
-               linewidth = 1) +
-  geom_point(aes(color = above_avg, size = is_2019)) +
-  annotate("text", x = 2019,
-           y = max(global_totals$deviation) * 0.8,
-           label = "2019: largest single-year\nsurge in the study period",
-           hjust = 1.15, size = 3.5,
-           fontface = "bold", color = "red3") +
-  scale_color_manual(
-    values = c("TRUE" = "tomato1", "FALSE" = "chartreuse3"),
-    labels = c("TRUE" = "Above Average", "FALSE" = "Below Average"),
-    name = NULL
-  ) +
-  scale_size_manual(values = c("TRUE" = 5, "FALSE" = 3), guide = "none") +
-  scale_x_continuous(breaks = 2013:2023) +
-  scale_y_continuous(labels = scales::label_comma()) +
-  labs(
-    title = "The 2019 Measles Surge Was an Unprecedented Outlier",
-    subtitle = "Annual deviation from the 2013–2023 mean global case count",
-    x = NULL,
-    y = "Cases Above / Below Average",
-    caption = "Figure 1: Visualization 1"
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = "top",
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank()
-  )
-```
 
 ## Measles Concentration
 
@@ -300,59 +231,6 @@ concentration_over_time |>
 ) |> 
   tab_caption(
     caption = "Figure 2: Table 1"
-  )
-```
-
-## Heatmap
-
-</br>
-
-```{r}
-#| label: heatmap
-#| fig-alt: "A heatmap showing each of the top 15 measles-burden countries' share of global cases from 2013 to 2023, where India shows chronic dark shading across 2013–2017 and Madagascar shows a single dramatic spike in 2019 representing 39.4% of all global cases that year."
-
-top_countries <- cases_year |>
-  filter(between(year, 2013, 2023)) |>
-  group_by(country) |>
-  summarize(total = sum(measles_total, na.rm = TRUE)) |>
-  slice_max(total, n = 15) |>
-  pull(country)
-
-madagascar_2019_share <- cases_year |>
-  filter(year == 2019) |>
-  mutate(global_total = sum(measles_total, na.rm = TRUE),
-         share = measles_total / global_total) |>
-  filter(country == "Madagascar") |>
-  pull(share) |>
-  scales::percent(accuracy = 0.1)
-
-cases_year |>
-  filter(between(year, 2013, 2023)) |>
-  group_by(year) |>
-  mutate(global_share = measles_total / sum(measles_total, na.rm = TRUE)) |>
-  ungroup() |>
-  filter(country %in% top_countries) |>
-  ggplot(aes(x = year, 
-             y = fct_reorder(country, global_share), 
-             fill = global_share)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  scale_fill_gradient(low = "cornsilk", high = "tomato1",
-                      labels = scales::percent,
-                      name = "Share of\nGlobal Cases") +
-  scale_x_continuous(breaks = 2013:2023) +
-  labs(
-    title = "Measles Burden Is Dominated by a Handful of Countries",
-    subtitle = "Share of global cases among top 15 burden countries, 2013–2023",
-    x = NULL, 
-    y = NULL,
-    caption = "Figure 3: Visualization 2"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    panel.grid = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5)
   )
 ```
 
@@ -431,6 +309,136 @@ summarize_country_burden() |>
                  unlike India whose burden is spread across multiple years.",
     locations = cells_body(columns = peak_cases, rows = country == "Madagascar")
   )
+```
+
+:::
+:::
+
+## Visualizations
+
+::: {.card title="Density of Measles Cases"}
+::: panel-tabset
+## Lollipop Graph
+
+</br>
+
+```{r}
+#| label: lollipop graph
+#| fig-alt: "A lollipop plot showing annual deviation of global measles cases from the 2013–2023 mean, where 2019 stands out dramatically above all other years as the largest single-year surge in the study period."
+
+global_totals <- cases_year |>
+  filter(between(year, 2013, 2023)) |>
+  group_by(year) |>
+  summarize(total_cases = sum(measles_total, na.rm = TRUE)) |>
+  mutate(
+    mean_cases = mean(total_cases),
+    deviation = total_cases - mean_cases,
+    above_avg = deviation > 0,
+    is_2019 = year == 2019
+  )
+
+madagascar_2019_share <- cases_year |>
+  filter(year == 2019) |>
+  mutate(global_total = sum(measles_total, na.rm = TRUE),
+         share = measles_total / global_total) |>
+  filter(country == "Madagascar") |>
+  pull(share) |>
+  scales::percent(accuracy = 0.1)
+
+
+ggplot(global_totals, aes(x = year, y = deviation)) +
+  geom_hline(yintercept = 0, linetype = "dashed", 
+             color = "gray50") +
+  geom_segment(aes(xend = year, yend = 0, color = above_avg), 
+               linewidth = 1) +
+  geom_point(aes(color = above_avg, size = is_2019)) +
+  annotate("text", x = 2019,
+           y = max(global_totals$deviation) * 0.8,
+           label = "2019: largest single-year\nsurge in the study period",
+           hjust = 1.15, size = 3.5,
+           fontface = "bold", color = "red3") +
+  scale_color_manual(
+    values = c("TRUE" = "tomato1", "FALSE" = "chartreuse3"),
+    labels = c("TRUE" = "Above Average", "FALSE" = "Below Average"),
+    name = NULL
+  ) +
+  scale_size_manual(values = c("TRUE" = 5, "FALSE" = 3), guide = "none") +
+  scale_x_continuous(breaks = 2013:2023) +
+  scale_y_continuous(labels = scales::label_comma()) +
+  labs(
+    title = "The 2019 Measles Surge Was an Unprecedented Outlier",
+    subtitle = "Annual deviation from the 2013–2023 mean global case count",
+    x = NULL,
+    y = "Cases Above / Below Average",
+    caption = "Figure 1: Visualization 1"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+```
+
+## Heatmap
+
+</br>
+
+```{r}
+#| label: heatmap
+#| fig-alt: "A heatmap showing each of the top 15 measles-burden countries' share of global cases from 2013 to 2023, where India shows chronic dark shading across 2013–2017 and Madagascar shows a single dramatic spike in 2019 representing 39.4% of all global cases that year."
+
+top_countries <- cases_year |>
+  filter(between(year, 2013, 2023)) |>
+  group_by(country) |>
+  summarize(total = sum(measles_total, na.rm = TRUE)) |>
+  slice_max(total, n = 15) |>
+  pull(country)
+
+madagascar_2019_share <- cases_year |>
+  filter(year == 2019) |>
+  mutate(global_total = sum(measles_total, na.rm = TRUE),
+         share = measles_total / global_total) |>
+  filter(country == "Madagascar") |>
+  pull(share) |>
+  scales::percent(accuracy = 0.1)
+
+cases_year |>
+  filter(between(year, 2013, 2023)) |>
+  group_by(year) |>
+  mutate(global_share = measles_total / sum(measles_total, na.rm = TRUE)) |>
+  ungroup() |>
+  filter(country %in% top_countries) |>
+  ggplot(aes(x = year, 
+             y = fct_reorder(country, global_share), 
+             fill = global_share)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  scale_fill_gradient(low = "cornsilk", high = "tomato1",
+                      labels = scales::percent,
+                      name = "Share of\nGlobal Cases") +
+  scale_x_continuous(breaks = 2013:2023) +
+  labs(
+    title = "Measles Burden Is Dominated by a Handful of Countries",
+    subtitle = "Share of global cases among top 15 burden countries, 2013–2023",
+    x = NULL, 
+    y = NULL,
+    caption = "Figure 3: Visualization 2"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+```
+
+## Density Map
+
+</br>
+
+```{r}
+
 ```
 
 :::
