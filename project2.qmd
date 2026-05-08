@@ -380,6 +380,8 @@ ggplot(global_totals, aes(x = year, y = deviation)) +
   )
 ```
 
+**2019** was a clear statistical outlier, with global cases far exceeding any other year in the study period. The remaining years cluster near or below the average, suggesting 2019 was not part of a broader upward trend but rather an **isolated spike**. This raises the question: Was the 2019 surge driven by outbreaks across **many countries simultaneously**, or was it **concentrated** in just a few?
+
 ## Heatmap
 
 </br>
@@ -433,6 +435,8 @@ cases_year |>
   )
 ```
 
+India stands out as the dominant chronic burden country with consistent dark cells from 2013-2017 before its intensity fades in later years. This pattern reflects meaningful progress in measles control. Madagascar, in contrast, remains nearly invisible until 2019 when its cell darkens sharply. Taken together, these patterns show that measles concentration is **not fixed over time**.
+
 ## Density Map
 
 </br>
@@ -446,7 +450,24 @@ cases_year |>
 
 # Measles in Madagascar
 
+## Madagascar Info
 
+### Data Context {height="50%"}
+::: {.card title="Madagascar Data"}
+.
+:::
+
+### Why This Country {height="50%"}
+::: {.card title="Why this country?"}
+.
+:::
+
+## Plot
+
+### Animated Plot
+::: {.card title="Animated Plot"}
+.
+:::
 
 
 
