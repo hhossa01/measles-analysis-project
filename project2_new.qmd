@@ -474,19 +474,71 @@ leaflet(map_data) |>
 
 ### Data Context {height="50%"}
 ::: {.card title="Madagascar Data"}
-.
+Vaccination coverage data for Madagascar was obtained from the WHO Immunization Data Portal, covering the percentage of children who received the first and second doses of the measles-containing vaccine from 2000–2025, reported annually through the WHO/UNICEF Joint Reporting Form on Immunization. Official estimates reflect national authority assessments of the most likely coverage, drawing from administrative data, surveys, or other sources.
 :::
 
 ### Why This Country {height="50%"}
 ::: {.card title="Why this country?"}
-.
+Madagascar made up nearly 40 percent of all measles cases reported worldwide in 2019, becoming the largest single source of that year’s global surge. With a population of roughly 30 million, this spike was not the result of a large population but a true nationwide health emergency. It also makes Madagascar an important example for understanding how vaccination coverage influences the risk of major outbreaks.
 :::
 
 ## Plot
 
+```{r}
+#| label: madagascar vaccine data 
+library(readxl)
+madagascar_vaccine <- read_excel("Measles vaccination coverage 2026-07-05 11-12 UTC.xlsx")
+
+madagascar_df <- cases_year |>
+  right_join(madagascar_vaccine, join_by(year == YEAR, iso3 == CODE, country == NAME))
+```
+
 ### Animated Plot
 ::: {.card title="Animated Plot"}
-.
+The animation traces Madagascar's measles vaccination coverage from 2000 to 2024, showing how first-dose coverage fluctuated over time and how the introduction of a second dose in 2020 followed the country's devastating 2019 outbreak.
+
+```{r}
+#| label: animated plot
+
+library(tidyverse)
+library(gganimate)
+library(gifski)
+mcv_clean <- madagascar_df %>%
+  filter(COVERAGE_CATEGORY == "OFFICIAL") %>%
+  select(year, ANTIGEN, COVERAGE, measles_incidence_rate_per_1000000_total_population) |>
+  mutate(
+    year = as.integer(year), # fixes year with decimal (e.g 2011.01234)
+    COVERAGE = case_when(
+      ANTIGEN == "MCV2" & year < 2020 ~ NA_real_,  # MCV2 not yet introduced
+      TRUE ~ COVERAGE
+    )
+  ) |>
+  filter(!is.na(COVERAGE))
+
+
+p <- ggplot(mcv_clean, 
+            aes(x = year, 
+                y = COVERAGE, 
+                color = ANTIGEN,
+                group = ANTIGEN)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3) +
+  geom_vline(xintercept = 2019L, linetype = "dashed", color = "tomato1", alpha = 0.6) +
+  annotate("text", x = 2019, y = 10, label = "2019 outbreak peak", 
+           hjust = -0.1, color = "tomato1", size = 3) +
+  scale_color_manual(
+    values = c("MCV1" = "tomato1", "MCV2" = "seagreen"),
+    labels = c("MCV1" = "First Dose", "MCV2" = "Second Dose")
+  ) +
+  labs(
+    title = "Madagascar Measles Vaccination Coverage Over Time",
+    subtitle = "Year: {frame_along}",
+    x = "Year", y = "Coverage (%)", color = NULL
+  ) +
+  transition_reveal(year)
+
+animate(p, renderer = gifski_renderer())
+```
 :::
 
 
