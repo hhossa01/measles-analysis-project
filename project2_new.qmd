@@ -541,7 +541,120 @@ animate(p, renderer = gifski_renderer())
 ```
 :::
 
+# Measles vs. Covid-19
 
+## Data Context & Research Question (Covid-19)
+
+### Context & Question {height="40%"}
+
+::: panel-tabset
+## About Covid-19
+
+</br>
+
+Over the years, public health emergencies have become a familiar occurrence around the world. Every country has been subjected to a disease outbreak at some point in time. Most people remember the most recent example of these worldwide outbreaks to be the **Covid-19 pandemic**, in which there was a global outbreak of the coronavirus disease that reached nearly every county in the world. Covid-19, similarly to measles, is an **airborne disease** and is spread through people’s respiratory systems. This page aims to analyze how measles was impacted by the Covid-19 pandemic, and how the cases compare across countries.
+
+## Covid-19 Data
+
+</br>
+
+The data utilized on this page focused on **historical Covid-19 data** from across the world; it contains the total number of Covid-19 cases in each country from January 2020 to March 2023. This data was accessed via a secondary website, called **API Ninjas**, that collects various sets of data. API Ninjas most likely obtained this data and any country or health-based data from **public census data**.
+
+## Research Question
+
+</br>
+
+Did measles reporting **drop** during the COVID‑19 pandemic (2020-2021), and does the later rebound suggest it was **suppressed**?
+:::
+
+### Table & Graph {height="60%"}
+
+::: {.card title="Measles vs. Covid-19 by Country"}
+
+```{r}
+compare2020 <- measles_covid_compare(2020) |> 
+  pivot_wider(names_from = disease, 
+              values_from = cases) |> 
+  rename("Measles_20" = "Measles", 
+         "COVID-19_20" = "COVID-19")
+compare2022 <- measles_covid_compare(2022) |> 
+  pivot_wider(names_from = disease, 
+              values_from = cases) |> 
+  rename("Measles_22" = "Measles", 
+         "COVID-19_22" = "COVID-19")
+
+inner_join(compare2020, compare2022, by = "country") |> 
+  gt() |> 
+  fmt_integer(columns = c("Measles_20", "COVID-19_20", 
+                          "Measles_22", "COVID-19_22")) |> 
+  tab_spanner(
+    label = "2020",
+    columns = c("Measles_20", "COVID-19_20")
+  ) |> 
+  tab_spanner(
+    label = "2022",
+    columns = c("Measles_22", "COVID-19_22")
+  ) |> 
+  tab_header(
+    title = "Total Measles and COVID-19 Cases by Country", 
+    subtitle = "Countries with Highest Concentration of COVID-19 Cases in 2020 and 2022"
+  ) |> 
+  tab_caption(
+    caption = "COVID-19 cases outnumber measles cases in 2020 and 2022 by millions of cases."
+  ) |> 
+  cols_label(
+    country = "Country", 
+    "Measles_20" = "Measles", "Measles_22" = "Measles", 
+    "COVID-19_20" = "COVID-19", "COVID-19_22" = "COVID-19"
+  ) |> 
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  )
+```
+
+:::
+
+## Interactive Bar Graph
+
+::: {.card}
+::: panel-tabset
+
+## Covid-19 Cases by Region
+
+```{r}
+means_joined <- inner_join(region_means(2020), region_means(2022), 
+                           by = "region")
+means_joined |> 
+  rename("2020" = covid_mean.x, "2022" = covid_mean.y) |> 
+  pivot_longer(cols = c("2020", "2022"), 
+               names_to = "year", values_to = "mean") |> 
+  ggplot(aes(x = year, y = mean, color = region)) + 
+  geom_segment(aes(x = year, xend = year, y = 0, yend = mean), 
+               position = position_dodge(width = 0.5)) + 
+  geom_point(aes(color = region), size = 4,
+             position = position_dodge(width = 0.5)) + 
+  scale_color_manual(values = c("aquamarine3", "coral", "darkorchid2", 
+                                "deeppink", "darkgreen", "darkgoldenrod1")) +
+  facet_wrap(~region) + 
+  scale_y_continuous(labels = comma) +
+  theme_minimal() + 
+  labs(x = "Year", y = "Mean", color = "Region", 
+       title = "Average COVID-19 Cases by Region", 
+       subtitle = "Comparison Between 2020 and 2022", 
+       caption = "Figure 8: Visualization 4")
+```
+
+This shows the clear dominance of mean COVID-19 cases from the **South-East Asia Region** and the **European Region**. Across all regions, the average number of cases in 2022 is **higher** than the average number of cases in 2020.
+
+## Interactive
+
+use orange and green bar graph
+
+Reactive bacteria plot for code
+
+:::
+:::
 
 
 
