@@ -10,12 +10,13 @@ format:
         aria-label: "Email"
     theme: minty
     orientation: columns
-embed-resources: true
 logo: medical-file.svg
-logo-alt: "Medical file logo."
+logo-alt: "Medical file logo"
+server: shiny
 ---
 
 ```{r}
+#| context: setup
 #| label: packages-setup
 #| message: false
 
@@ -33,19 +34,26 @@ library(scales)
 library(broom)
 library(gt)
 library(leaflet)
+library(shiny)
+library(bslib)
+library(readxl)
 ```
 
 ```{r}
+#| label: load datasets
+#| context: setup
+
 cases_month <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_month.csv')
 cases_year <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-06-24/cases_year.csv')
-```
 
-```{r}
 covid_cleaned_df <- read.csv("covid_cleaned.csv")
 country_gdp <- read.csv("country_gdp.csv")
 ```
 
+
+
 ```{r}
+#| context: data
 #| label: concentration function
 
 calc_concentration <- function(year_in, df = cases_year) {
@@ -69,7 +77,9 @@ calc_concentration <- function(year_in, df = cases_year) {
 ```
 
 ```{r}
+#| context: data
 #| label: concentration summary
+
 key_years <- cases_year |>
   filter(between(year, 2013, 2023)) |>
   distinct(year) |>
@@ -91,6 +101,7 @@ concentration_over_time <- map_dfr(key_years, summarize_concentration)
 ```
 
 ```{r}
+#| context: setup
 #| label: rq2 summary 1 function
 
 measles_covid_compare <- function(year1, m_df = cases_year, 
@@ -125,6 +136,7 @@ measles_covid_compare <- function(year1, m_df = cases_year,
 ```
 
 ```{r}
+#| context: data
 #| label: rq2 summary 2 function
 
 region_means <- function(year, df1 = cases_month, covid = covid_cleaned_df){
@@ -148,6 +160,8 @@ region_means <- function(year, df1 = cases_month, covid = covid_cleaned_df){
 ```
 
 ```{r}
+#| context: data
+
 cases_gdp_join <- inner_join(cases_year, country_gdp, 
                              by = join_by(year, iso3 == country_code)) |>
     mutate(
@@ -157,10 +171,8 @@ cases_gdp_join <- inner_join(cases_year, country_gdp,
 ```
 
 ```{r}
-tt <- t.test(gdp_growth ~ high_measles, data = cases_gdp_join)
-```
+#| context: data
 
-```{r}
 world_countries <- read.csv("country-coord.csv") |> 
   rename(lat = Latitude..average., 
          long = Longitude..average.)
@@ -187,9 +199,9 @@ How does the **concentration** of measles compare across **countries**?
 :::
 
 ### Tables {height="70%"}
-::: {.card}
-::: panel-tabset
 
+:::: card
+::: panel-tabset
 ## Measles Concentration
 
 </br>
@@ -318,12 +330,47 @@ summarize_country_burden() |>
   )
 ```
 
+
+## Glossary
+
+</br>
+
+```{r}
+tribble(
+  ~Term, ~Definition,
+  "Country burden", "The total number of measles cases attributed to a country over the selected study period.",
+  "Top Country", "The country with the largest share of global measles cases in that year.",
+  "Top Country Share", "The percentage of all global measles cases in that year that came from the top country.",
+  "2nd & 3rd Countries", "The combined share of global measles cases from the countries ranked second and third in that year.",
+  "# Major Burden Countries", "The number of countries responsible for at least 10% of global measles cases in that year.",
+  "Major burden country", "A country with 10% or more of global measles cases in a given year.",
+) |>
+  gt() |>
+  tab_header(
+    title = "Glossary of Measles Burden Terms",
+    subtitle = "Definitions used in the concentration and burden tables"
+  ) |>
+  cols_label(
+    Term = "Term",
+    Definition = "Definition"
+  ) |>
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels()
+  ) |>
+  tab_options(
+    table.font.size = px(14),
+    data_row.padding = px(6)
+  )
+```
+
 :::
-:::
+::::
+
 
 ## Visualizations
 
-::: {.card title="Density of Measles Cases"}
+:::: {.card title="Density of Measles Cases"}
 ::: panel-tabset
 ## Lollipop Graph
 
@@ -449,35 +496,23 @@ India stands out as the dominant chronic burden country with consistent dark cel
 </br>
 
 ```{r}
-map_data <- cases_year |> 
-  filter(year == 2019) |> 
-  select(!region) |> 
-  inner_join(world_countries, by = join_by(iso3 == Alpha.3.code))
-
-leaflet(map_data) |> 
-  addTiles() |> 
-  addMarkers(
-    lng = map_data$long, 
-    lat = map_data$lat, 
-    label = paste(map_data$country), 
-    popup = paste(map_data$country, "<br>", 
-                  "Total Cases : ", map_data$`measles_total`)
-  )
+leafletOutput("measlesmap", height = "500px")
 ```
-
 :::
-:::
+::::
 
 # Measles in Madagascar
 
 ## Madagascar Info
 
 ### Data Context {height="50%"}
+
 ::: {.card title="Madagascar Data"}
 Vaccination coverage data for Madagascar was obtained from the WHO Immunization Data Portal, covering the percentage of children who received the first and second doses of the measles-containing vaccine from 2000–2025, reported annually through the WHO/UNICEF Joint Reporting Form on Immunization. Official estimates reflect national authority assessments of the most likely coverage, drawing from administrative data, surveys, or other sources.
 :::
 
 ### Why This Country {height="50%"}
+
 ::: {.card title="Why this country?"}
 Madagascar made up nearly 40 percent of all measles cases reported worldwide in 2019, becoming the largest single source of that year’s global surge. With a population of roughly 30 million, this spike was not the result of a large population but a true nationwide health emergency. It also makes Madagascar an important example for understanding how vaccination coverage influences the risk of major outbreaks.
 :::
@@ -486,7 +521,7 @@ Madagascar made up nearly 40 percent of all measles cases reported worldwide in 
 
 ```{r}
 #| label: madagascar vaccine data 
-library(readxl)
+#| context: data
 madagascar_vaccine <- read_excel("Measles vaccination coverage 2026-07-05 11-12 UTC.xlsx")
 
 madagascar_df <- cases_year |>
@@ -494,7 +529,8 @@ madagascar_df <- cases_year |>
 ```
 
 ### Animated Plot
-::: {.card title="Animated Plot"}
+
+::: {.card title="Madagascar Vaccination Coverage Percentage"}
 The animation traces Madagascar's measles vaccination coverage from 2000 to 2024, showing how first-dose coverage fluctuated over time and how the introduction of a second dose in 2020 followed the country's devastating 2019 outbreak.
 
 ```{r}
@@ -537,7 +573,7 @@ p <- ggplot(mcv_clean,
   ) +
   transition_reveal(year)
 
-animate(p, renderer = gifski_renderer())
+animate(p, renderer = gifski_renderer(), end_pause = 20)
 ```
 :::
 
@@ -570,7 +606,6 @@ Did measles reporting **drop** during the COVID‑19 pandemic (2020-2021), and d
 ### Table & Graph {height="60%"}
 
 ::: {.card title="Measles vs. Covid-19 by Country"}
-
 ```{r}
 compare2020 <- measles_covid_compare(2020) |> 
   pivot_wider(names_from = disease, 
@@ -612,14 +647,12 @@ inner_join(compare2020, compare2022, by = "country") |>
     locations = cells_column_labels()
   )
 ```
-
 :::
 
 ## Interactive Bar Graph
 
-::: {.card}
+:::: card
 ::: panel-tabset
-
 ## Covid-19 Cases by Region
 
 ```{r}
@@ -649,27 +682,87 @@ This shows the clear dominance of mean COVID-19 cases from the **South-East Asia
 
 ## Interactive
 
-use orange and green bar graph
+```{r}
+#| content: card-toolbar
 
-Reactive bacteria plot for code
+radioButtons("radio", "Select Transformation", 
+             choices = list("Raw Data" = 1, 
+                            "Square Root" = 2,
+                            "Logarithmic" = 3),
+             selected = "3")
+```
 
+```{r}
+#| label: covid-bar-graph
+#| message: false
+#| warning: false
+
+plotOutput("interactiveplot")
+
+```
 :::
-:::
+::::
 
+```{r}
+#| context: server
+#| message: false
+#| warning: false
 
+output$interactiveplot <- renderPlot({
+  p <- ggplot(measles_covid_compare(2020), 
+              aes(y = country, x = cases, fill = disease)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    scale_fill_manual(values = c("COVID-19" = "#D85A30", 
+                                 "Measles" = "#1D9E75")) +
+    labs(title = "Measles vs. COVID-19 Cases in 2020", 
+         y = NULL, fill = NULL) +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "top", panel.grid.major.y = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          axis.text.y = element_text(size = 10))
+  
+  if(input$radio == 1){
+    p <- p + 
+      labs(subtitle = "Top 10 countries by COVID-19 case count", 
+           x = "Total Cases")
+  }
+  
+  if(input$radio == 2){
+    p <- p + 
+      scale_x_sqrt() + 
+      labs(subtitle = "Top 10 countries by COVID-19 case count — 
+           square root scale", 
+           x = "Total Cases (sqrt scale)")
+  }
+  
+  if(input$radio == 3){
+    p <- p + 
+      scale_x_log10(labels = label_number(scale_cut = cut_short_scale()), 
+                  breaks = 10^(0:8)) + 
+      labs(subtitle = "Top 10 countries by COVID-19 case count — log scale", 
+           x = "Total Cases (log scale)")
+  }
+  
+  p
+  
+})
 
+output$measlesmap <- renderLeaflet({
+  map_data <- cases_year |> 
+  filter(year == 2019) |> 
+  select(!region) |> 
+  inner_join(world_countries, by = join_by(iso3 == Alpha.3.code))
 
+  m <- leaflet(map_data) |> 
+    addTiles() |> 
+    addMarkers(
+      lng = map_data$long, 
+      lat = map_data$lat, 
+      label = paste(map_data$country), 
+      popup = paste(map_data$country, "<br>", 
+                    "Total Cases : ", map_data$`measles_total`)
+  )
+  m
+})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+```
